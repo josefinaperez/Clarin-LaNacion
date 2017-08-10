@@ -12,7 +12,7 @@ def leerCsvColumnas(nombre, var_dep, var_ind):
     dataset= pd.read_csv("Data/" + nombre + ".csv", header=0, sep=';', quotechar='"', encoding = "ISO-8859-1")
     X = dataset.iloc[: , var_dep].values
     Y = dataset.iloc[: , var_ind].values
-    return X, Y
+    return dataset, X, Y
 
 def leerCsv(nombre):
     dataset = pd.read_csv("Data/" + nombre + ".csv", header=0, sep=';', quotechar='"', encoding = "ISO-8859-1")
@@ -24,7 +24,7 @@ def encodeData(data, index):
     data[:, index] = labelencoder.fit_transform(data[:, index])
     return data
 
-def dummyVariables(data, index):
+def getDummyVariables(data, index):
     from sklearn.preprocessing import OneHotEncoder
     onehotencoder = OneHotEncoder(categorical_features = [index])
     data = onehotencoder.fit_transform(data).toarray
@@ -32,10 +32,20 @@ def dummyVariables(data, index):
     data = data.drop(column_name, 1)
     return data
 
-df = leerCsv("clarin_titulos_final")
-X, Y = leerCsvColumnas("clarin_titulos_final", [23, 24, 26, 27], 25)
+def splitTrainTest(X, y, porc_test):
+    from sklearn.cross_validation import train_test_split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = porc_test, random_state = 0)
+    return X_train, X_test, y_train, y_test
+
+def featureScaling(X):
+    from sklearn.preprocessing import StandardScaler
+    sc = StandardScaler()
+    X = sc.fit_transform(X)
+    return X
+
+
+df, X, Y = leerCsvColumnas("clarin_titulos_final", [23, 24, 26, 27], 25)
 X = encodeData(X,0)
-X = dummyVariables(X,0)
-print(X[:, 0])
-index = 0
-data = X
+X = getDummyVariables(X,0)
+X_train, X_test, y_train, y_test = splitTrainTest(X, Y, 0.2)
+X_train = featureScaling(X_train)
